@@ -1,219 +1,106 @@
-/**
- *  @abstract
- */
-class Alignment {
-    /**
-     *  @abstract
-     */
-    value(toAlign, size) {
-    }
-}
-
-class LeftAlignment extends Alignment {
-    value(toAlign, size) {
-        return toAlign + ' '.repeat(size - toAlign.length)
-    }
-}
-
-class RightAlignment extends Alignment {
-    value(toAlign, size) {
-        return ' '.repeat(size - toAlign.length) + toAlign
-    }
-}
-
-class CenterAlignment extends Alignment {
-    value(toAlign,size){
-        const leftSpaces = Math.ceil((size - toAlign.length) / 2)
-        const rightSpaces = size - toAlign.length - leftSpaces
-        return ' '.repeat(leftSpaces) + toAlign + ' '.repeat(rightSpaces)
-    }
-}
-
-class AlignColumns {
-    _lines;
-
-    constructor(lines, alignment = new LeftAlignment()) {
-        this._lines = lines
-        this._alignment = alignment;
-    }
-
-    value() {
-        this.calculateMaxColumnSizes()
-
-        return this.linesWithColumnsAligned()
-    }
-
-    linesWithColumnsAligned() {
-        return this._lines.map(line => this.alignColumnOfLine(line))
-    }
-
-    alignColumnOfLine(line) {
-        return this._maxColumnSizes.map((columnSize, columnIndex) => {
-            const toAlign = line[columnIndex] ?? [];
-            return this._alignment.value(toAlign,columnSize);
-        })
-    }
-
-    calculateMaxColumnSizes() {
-        this._maxColumnSizes = []
-        this._lines.forEach( line => {
-            line.forEach( (cell,index) => {
-                this._maxColumnSizes[index] = Math.max(this._maxColumnSizes[index]??0,cell.length)
-            })
-        })
-    }
-
-    static from(input, alignment) {
-        return new AlignColumns(this.linesWithColumnsFrom(input),alignment).value()
-    }
-
-    static linesWithColumnsFrom(input) {
-        if (input.length == 0)
-            return []
-        else {
-            const lines = input.split('\n')
-            return lines.map(line => line.split('$'))
-        }
-    }
-
-    static asString(input, alignment) {
-        const linesWithAlignColumns = this.from(input,alignment)
-        if(linesWithAlignColumns.length==0)
-            return '**\n' +
-                '||\n' +
-                '**';
-        else {
-            // Hay que reemplazar todo esto por uso de stream
-            const separator = this.separatorFor(linesWithAlignColumns)
-
-            return separator +'\n' +
-                this.stringForAll(linesWithAlignColumns) +
-                separator
-        }
-    }
-
-    static separatorFor(linesWithAlignColumns) {
-        return linesWithAlignColumns[0]
-            .map(cell => '*' + '-'.repeat(cell.length))
-            .reduce((prev, current) => prev + current, '') + '*';
-    }
-
-    static stringForAll(linesWithAlignColumns) {
-        return linesWithAlignColumns
-            .map(line => this.stringFor(line))
-            .reduce((prev, current) => prev + current, '');
-    }
-
-    static stringFor(line) {
-        return line
-            .map(cell => '|' + cell)
-            .reduce((prev, current) => prev + current, '') + '|\n';
-    }
-}
+import {AlignColumns, CenterAlignment, RightAlignment} from "./AlignColumns";
 
 describe('Align Columns suite', () => {
-    test('Should return no lines when there are no lines with columns to align', () => {
-        const alignColumns = new AlignColumns([])
-        expect(alignColumns.value()).toEqual([])
+    test('Should return no rows when there are no rows with columns to align', () => {
+        const alignColumns = AlignColumns.fromPlainArray([])
+        expect(alignColumns.asPlainArray()).toEqual([])
     })
 
-    test('Should return the line with the column when there is one line and column', () => {
-        const alignColumns = new AlignColumns([['1234']])
-        expect(alignColumns.value()).toEqual([['1234']])
+    test('Should return the row with the column when there is one row and column', () => {
+        const alignColumns = AlignColumns.fromPlainArray([['1234']])
+        expect(alignColumns.asPlainArray()).toEqual([['1234']])
     })
 
-    test('Should return lines with its columns for same column size', () => {
-        const alignColumns = new AlignColumns([['1234'],['abcd']])
-        expect(alignColumns.value()).toEqual([['1234'],['abcd']])
+    test('Should return rows with its columns for same column size', () => {
+        const alignColumns = AlignColumns.fromPlainArray([['1234'], ['abcd']])
+        expect(alignColumns.asPlainArray()).toEqual([['1234'], ['abcd']])
     })
 
-    test('Columns of different lines should have the same width', () => {
-        const alignColumns = new AlignColumns([['1234'],['12']])
-        expect(alignColumns.value()).toEqual([['1234'],['12  ']])
+    test('Columns of different rows should have the same width', () => {
+        const alignColumns = AlignColumns.fromPlainArray([['1234'], ['12']])
+        expect(alignColumns.asPlainArray()).toEqual([['1234'], ['12  ']])
     })
 
-    test('Max column width can be in any line', () => {
-        const alignColumns = new AlignColumns([['12'],['1234']])
-        expect(alignColumns.value()).toEqual([['12  '],['1234']])
+    test('Max column width can be in any row', () => {
+        const alignColumns = AlignColumns.fromPlainArray([['12'], ['1234']])
+        expect(alignColumns.asPlainArray()).toEqual([['12  '], ['1234']])
     })
 
-    test('Align lines with more than one column', () => {
-        const alignColumns = new AlignColumns([['12','abc'],['1234','ab']])
-        expect(alignColumns.value()).toEqual([['12  ','abc'],['1234','ab ']])
+    test('Align rows with more than one column', () => {
+        const alignColumns = AlignColumns.fromPlainArray([['12', 'abc'], ['1234', 'ab']])
+        expect(alignColumns.asPlainArray()).toEqual([['12  ', 'abc'], ['1234', 'ab ']])
     })
 
-    test('First line can have different number of columns', () => {
-        const alignColumns = new AlignColumns([['12','abc'],['1234']])
-        expect(alignColumns.value()).toEqual([['12  ','abc'],['1234','   ']])
+    test('First row can have different number of columns', () => {
+        const alignColumns = AlignColumns.fromPlainArray([['12', 'abc'], ['1234']])
+        expect(alignColumns.asPlainArray()).toEqual([['12  ', 'abc'], ['1234', '   ']])
     })
 
-    test('Any line can have different number of columns', () => {
-        const alignColumns = new AlignColumns([['12'],['1234','abc']])
-        expect(alignColumns.value()).toEqual([['12  ','   '],['1234','abc']])
+    test('Any row can have different number of columns', () => {
+        const alignColumns = AlignColumns.fromPlainArray([['12'], ['1234', 'abc']])
+        expect(alignColumns.asPlainArray()).toEqual([['12  ', '   '], ['1234', 'abc']])
     })
 
     test('Can align to right', () => {
-        const alignColumns = new AlignColumns([['12','abc'],['1234','a']], new RightAlignment())
-        expect(alignColumns.value()).toEqual([['  12','abc'],['1234','  a']])
+        const alignColumns = AlignColumns.fromPlainArray([['12', 'abc'], ['1234', 'a']], new RightAlignment())
+        expect(alignColumns.asPlainArray()).toEqual([['  12', 'abc'], ['1234', '  a']])
     })
 
     test('Alignment can be center', () => {
-        const alignColumns = new AlignColumns([['12','abc'],['1234','ab']], new CenterAlignment())
-        expect(alignColumns.value()).toEqual([[' 12 ','abc'],['1234',' ab']])
+        const alignColumns = AlignColumns.fromPlainArray([['12', 'abc'], ['1234', 'ab']], new CenterAlignment())
+        expect(alignColumns.asPlainArray()).toEqual([[' 12 ', 'abc'], ['1234', ' ab']])
     })
 
     test('Can align an empty string', () => {
-        const alignColumns = AlignColumns.from('', new CenterAlignment());
-        expect(alignColumns).toEqual([])
+        const alignColumns = AlignColumns.fromPlainText('', new CenterAlignment());
+        expect(alignColumns.asPlainArray()).toEqual([])
     })
 
-    test('Can align one line with one column', () => {
-        const alignColumns = AlignColumns.from('123', new CenterAlignment());
-        expect(alignColumns).toEqual([['123']])
+    test('Can align one row with one column', () => {
+        const alignColumns = AlignColumns.fromPlainText('123', new CenterAlignment());
+        expect(alignColumns.asPlainArray()).toEqual([['123']])
     })
 
-    test('Can align one lines with many columns', () => {
-        const alignColumns = AlignColumns.from('123$abc', new CenterAlignment());
-        expect(alignColumns).toEqual([['123','abc']])
+    test('Can align one rows with many columns', () => {
+        const alignColumns = AlignColumns.fromPlainText('123$abc', new CenterAlignment());
+        expect(alignColumns.asPlainArray()).toEqual([['123', 'abc']])
     })
 
-    test('Can align many lines with many columns', () => {
-        const alignColumns = AlignColumns.from('123$abc\n1$a', new CenterAlignment());
-        expect(alignColumns).toEqual([['123','abc'],[' 1 ',' a ']])
+    test('Can align many rows with many columns', () => {
+        const alignColumns = AlignColumns.fromPlainText('123$abc\n1$a', new CenterAlignment());
+        expect(alignColumns.asPlainArray()).toEqual([['123', 'abc'], [' 1 ', ' a ']])
     })
 
     test('Can generate string output from empty input', () => {
-        const stringOutput = AlignColumns.asString('', new CenterAlignment());
-        expect(stringOutput).toEqual(
+        const alignColumns = AlignColumns.fromPlainText('', new CenterAlignment());
+        expect(alignColumns.asPlainText()).toEqual(
             '**\n' +
             '||\n' +
             '**')
     })
 
-    test('Can generate string output one line with one column', () => {
-        const stringOutput = AlignColumns.asString('123', new CenterAlignment());
-        expect(stringOutput).toEqual(
+    test('Can generate string output one row with one column', () => {
+        const alignColumns = AlignColumns.fromPlainText('123', new CenterAlignment());
+        expect(alignColumns.asPlainText()).toEqual(
             '*---*\n' +
             '|123|\n' +
             '*---*')
     })
 
-    test('Can generate string output one line with many columns', () => {
-        const stringOutput = AlignColumns.asString('123$a', new CenterAlignment());
-        expect(stringOutput).toEqual(
+    test('Can generate string output one row with many columns', () => {
+        const alignColumns = AlignColumns.fromPlainText('123$a', new CenterAlignment());
+        expect(alignColumns.asPlainText()).toEqual(
             '*---*-*\n' +
             '|123|a|\n' +
             '*---*-*')
     })
 
-    test('Can generate string output with many lines and many columns', () => {
-        const stringOutput = AlignColumns.asString('123$a\n1$abc', new CenterAlignment());
-        expect(stringOutput).toEqual(
+    test('Can generate string output with many rows and many columns', () => {
+        const alignColumns = AlignColumns.fromPlainText('123$a\n1$abc', new CenterAlignment());
+        expect(alignColumns.asPlainText()).toEqual(
             '*---*---*\n' +
             '|123| a |\n' +
             '| 1 |abc|\n' +
             '*---*---*')
     })
-
-
 })
