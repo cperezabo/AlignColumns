@@ -90,7 +90,7 @@ class Row {
     }
 
     #columnAt(index) {
-        return this.#columns[index] ?? new Column('');
+        return this.#columns.either(index, new Column(''));
     }
 }
 
@@ -118,7 +118,7 @@ class RowShape {
     }
 
     #mergeColumnWidthsWith(otherShape) {
-        return new RowShape(this.#columnWidths.map((width, index) => Math.max(width, otherShape.#columnWidths[index] ?? 0)));
+        return new RowShape(this.#columnWidths.map((width, index) => Math.max(width, otherShape.#columnWidths.either(index, 0))));
     }
 
     #withLongerAndShorterShapes(otherShape, callback) {
@@ -199,3 +199,8 @@ module.exports = {
     RightAlignment,
     CenterAlignment,
 };
+
+// Don't look at me!!
+Array.prototype.either = function (index, defaultValue) {
+    return this[index] ?? defaultValue;
+}
