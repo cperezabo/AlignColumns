@@ -172,16 +172,16 @@ class AlignColumns {
     }
 
     #plainText(borderSeparator, borderCharacter, columnSeparator) {
-        const textBorderRow = Row.empty()
+        const borderText = Row.empty()
             .align(this.#alignment, this.#commonRowShape)
             .asPlainText(borderSeparator)
             .replaceAll(' ', borderCharacter);
 
-        let textContentRows = this.#rows.map(
+        const rowTexts = this.#rows.map(
             row => row.align(this.#alignment, this.#commonRowShape).asPlainText(columnSeparator)
         );
 
-        return [textBorderRow, ...textContentRows, textBorderRow].join('\n');
+        return [borderText, ...rowTexts, borderText].join('\n');
     }
 
     #emptyPlainText(borderSeparator, columnSeparator) {
