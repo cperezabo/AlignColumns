@@ -58,6 +58,10 @@ class Row {
         this.#shape = RowShape.fromColumns(columns)
     }
 
+    static empty() {
+        return new Row([]);
+    }
+
     static fromPlainArray(columns) {
         return new Row(columns.map(column => new Column(column)))
     }
@@ -168,7 +172,7 @@ class AlignColumns {
     }
 
     #plainText(borderSeparator, borderCharacter, columnSeparator) {
-        const textBorderRow = Row.fromPlainArray([])
+        const textBorderRow = Row.empty()
             .align(this.#alignment, this.#commonRowShape)
             .asPlainText(borderSeparator)
             .replaceAll(' ', borderCharacter);
