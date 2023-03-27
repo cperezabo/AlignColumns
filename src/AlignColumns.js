@@ -67,13 +67,7 @@ class Row {
     }
 
     align(alignment, shape) {
-        return shape.alignRow(this, alignment)
-    }
-
-    alignColumnAt(index, alignment, width) {
-        const columns = [...this.#columns];
-        columns[index] = this.#columnAt(index).align(alignment, width);
-        return new Row(columns);
+        return new Row(shape.alignColumns(this.#columns, alignment));
     }
 
     mergeOwnShapeWith(otherShape) {
@@ -87,10 +81,6 @@ class Row {
     asPlainText(columnSeparator) {
         let textRow = this.#columns.map(column => column.asPlainText()).join(columnSeparator);
         return columnSeparator + textRow + columnSeparator
-    }
-
-    #columnAt(index) {
-        return this.#columns.either(index).or(() => new Column(''));
     }
 }
 
@@ -113,8 +103,8 @@ class RowShape {
         return this.#withLongerAndShorterShapes(otherShape, (longer, shorter) => longer.#mergeColumnWidthsWith(shorter));
     }
 
-    alignRow(row, alignment) {
-        return this.#columnWidths.reduce((alignedRow, width, index) => alignedRow.alignColumnAt(index, alignment, width), row);
+    alignColumns(columns, alignment) {
+        return this.#columnWidths.map((width, index) => columns.either(index).or(() => new Column('')).align(alignment, width));
     }
 
     #mergeColumnWidthsWith(otherShape) {
