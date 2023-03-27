@@ -3,6 +3,19 @@
  */
 class Alignment {
     /**
+     * @protected
+     */
+    _paddingCharacter;
+
+    constructor(paddingCharacter = ' ') {
+        this._paddingCharacter = paddingCharacter;
+    }
+
+    changePaddingCharacter(paddingCharacter) {
+        return new this.constructor(paddingCharacter)
+    }
+
+    /**
      *  @abstract
      */
     apply(content, width) {
@@ -11,13 +24,13 @@ class Alignment {
 
 class LeftAlignment extends Alignment {
     apply(content, width) {
-        return content + ' '.repeat(width - content.length)
+        return content + this._paddingCharacter.repeat(width - content.length)
     }
 }
 
 class RightAlignment extends Alignment {
     apply(content, width) {
-        return ' '.repeat(width - content.length) + content
+        return this._paddingCharacter.repeat(width - content.length) + content
     }
 }
 
@@ -25,7 +38,7 @@ class CenterAlignment extends Alignment {
     apply(content, width) {
         const leftSpaces = Math.ceil((width - content.length) / 2)
         const rightSpaces = width - content.length - leftSpaces
-        return ' '.repeat(leftSpaces) + content + ' '.repeat(rightSpaces)
+        return this._paddingCharacter.repeat(leftSpaces) + content + this._paddingCharacter.repeat(rightSpaces)
     }
 }
 
@@ -160,9 +173,8 @@ class AlignColumns {
 
     #plainText(borderSeparator, borderCharacter, columnSeparator) {
         const borderText = Row.empty()
-            .align(this.#alignment, this.#commonRowShape)
-            .asPlainText(borderSeparator)
-            .replaceAll(' ', borderCharacter);
+            .align(this.#alignment.changePaddingCharacter(borderCharacter), this.#commonRowShape)
+            .asPlainText(borderSeparator);
 
         const rowTexts = this.#rows.map(
             row => row.align(this.#alignment, this.#commonRowShape).asPlainText(columnSeparator)
