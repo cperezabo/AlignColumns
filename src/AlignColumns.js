@@ -50,7 +50,7 @@ class Column {
     }
 
     align(alignment, width) {
-        return new Column(alignment.apply(this.#content, width))
+        return new this.constructor(alignment.apply(this.#content, width))
     }
 
     width() {
@@ -72,15 +72,15 @@ class Row {
     }
 
     static empty() {
-        return new Row([]);
+        return new this([]);
     }
 
     static fromPlainArray(columns) {
-        return new Row(columns.map(column => new Column(column)))
+        return new this(columns.map(column => new Column(column)))
     }
 
     align(alignment, shape) {
-        return new Row(shape.alignColumns(this.#columns, alignment));
+        return new this.constructor(shape.alignColumns(this.#columns, alignment));
     }
 
     mergeOwnShapeWith(otherShape) {
@@ -105,11 +105,11 @@ class RowShape {
     }
 
     static fromColumns(columns) {
-        return new RowShape(columns.map(column => column.width()));
+        return new this(columns.map(column => column.width()));
     }
 
     static empty() {
-        return new RowShape([]);
+        return new this([]);
     }
 
     mergeWith(otherShape) {
@@ -121,7 +121,7 @@ class RowShape {
     }
 
     #mergeColumnWidthsWith(otherShape) {
-        return new RowShape(this.#columnWidths.map((width, index) => Math.max(width, otherShape.#columnWidths.either(index).or(() => 0))));
+        return new this.constructor(this.#columnWidths.map((width, index) => Math.max(width, otherShape.#columnWidths.either(index).or(() => 0))));
     }
 
     #withLongerAndShorterShapes(otherShape, callback) {
@@ -144,7 +144,7 @@ class AlignColumns {
     }
 
     static fromPlainArray(plainRows, alignment) {
-        return new AlignColumns(plainRows.map(Row.fromPlainArray), alignment);
+        return new this(plainRows.map(Row.fromPlainArray.bind(Row)), alignment);
     }
 
     static fromPlainText(text, alignment) {
