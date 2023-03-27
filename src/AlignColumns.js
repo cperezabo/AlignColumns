@@ -155,10 +155,7 @@ class AlignColumns {
     }
 
     #calculateCommonRowShape() {
-        return this.#rows.reduce(
-            (commonRowShape, row) => row.mergeOwnShapeWith(commonRowShape),
-            RowShape.empty(),
-        );
+        return this.#rows.reduce((shape, row) => row.mergeOwnShapeWith(shape), RowShape.empty());
     }
 
     #plainText(borderSeparator, borderCharacter, columnSeparator) {
